@@ -84,7 +84,7 @@ CoachMic is a voice-first interview coaching platform that transforms jobseekers
 *   💼 Currently: Back-End Tester / QA Analyst for an AI recruitment matching platform
 *   🏆 2x IBM TechXchange watsonx.ai Hackathon Winner (BrainStormX, Meeting Ledger)
 *   🔐 Cybersecurity specialist (CompTIA Security+ CE, Azure certified)
-*   🌐 [LinkedIn](https://linkedin.com/in/patrickndille) | [GitHub]
+*   🌐 [LinkedIn](https://linkedin.com/in/patrickndille) | [GitHub](https://github.com/patrickndille)
 
 
 # Getting Started
@@ -197,3 +197,4 @@ Found a bug or have a suggestion? [Open an issue](https://github.com/patrickndil
 - Expected vs actual behavior
 
 - Screenshots if applicable
+
