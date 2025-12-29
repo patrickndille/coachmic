@@ -81,7 +81,7 @@ CoachMic is a voice-first interview coaching platform that transforms jobseekers
 ### About the Builder
 **Patrick Ejelle-Ndille**
 *   🎓 Built before Graduating, January 2026 from triOS College (Information Technology)
-*   💼 Currently: Back-End Tester / QA Analyst at [Guhuza](https://guhuza.com/)
+*   💼 Currently: Back-End Tester / QA Analyst for an AI recruitment matching platform
 *   🏆 2x IBM TechXchange watsonx.ai Hackathon Winner (BrainStormX, Meeting Ledger)
 *   🔐 Cybersecurity specialist (CompTIA Security+ CE, Azure certified)
 *   🌐 [LinkedIn](https://linkedin.com/in/patrickndille) | [GitHub]
@@ -195,4 +195,5 @@ Found a bug or have a suggestion? [Open an issue](https://github.com/patrickndil
 - Clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior
+
 - Screenshots if applicable
