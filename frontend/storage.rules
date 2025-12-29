@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Resume files - users can only access their own files
+    match /resumes/{userId}/{fileName} {
+      // Allow read/write/delete only to authenticated users accessing their own files
+      allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
