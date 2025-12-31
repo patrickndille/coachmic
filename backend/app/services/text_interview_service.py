@@ -16,8 +16,6 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from google.cloud import firestore
-
 from app.models.text_interview import (
     InterviewConfig,
     InterviewMetrics,
@@ -29,6 +27,7 @@ from app.services.elevenlabs_service import (
     build_conversation_summary,
 )
 from app.services.gemini_service import generate_with_gemini
+from app.services.firebase_service import get_firestore_client
 
 
 # Firestore collection name
@@ -52,11 +51,6 @@ FILLER_WORDS = [
     "um", "uh", "like", "you know", "so", "actually", "basically",
     "literally", "i mean", "kind of", "sort of", "really",
 ]
-
-
-def _get_firestore_client() -> firestore.Client:
-    """Get Firestore client instance."""
-    return firestore.Client()
 
 
 def _count_filler_words(text: str) -> tuple[int, list[str]]:
@@ -505,7 +499,7 @@ def format_transcript_for_feedback(messages: list[TextInterviewMessage]) -> list
 
 async def save_interview_state(state: TextInterviewState) -> None:
     """Save interview state to Firestore."""
-    db = _get_firestore_client()
+    db = get_firestore_client()
     doc_ref = db.collection(TEXT_INTERVIEW_COLLECTION).document(state.session_id)
 
     # Convert to dict for storage
@@ -524,7 +518,7 @@ async def save_interview_state(state: TextInterviewState) -> None:
 
 async def load_interview_state(session_id: str) -> Optional[TextInterviewState]:
     """Load interview state from Firestore."""
-    db = _get_firestore_client()
+    db = get_firestore_client()
     doc_ref = db.collection(TEXT_INTERVIEW_COLLECTION).document(session_id)
     doc = doc_ref.get()
 
@@ -546,6 +540,6 @@ async def load_interview_state(session_id: str) -> Optional[TextInterviewState]:
 
 async def delete_interview_state(session_id: str) -> None:
     """Delete interview state from Firestore."""
-    db = _get_firestore_client()
+    db = get_firestore_client()
     doc_ref = db.collection(TEXT_INTERVIEW_COLLECTION).document(session_id)
     doc_ref.delete()

@@ -104,3 +104,6 @@ deployment-logs.txt
 
 secrets/
 secrets/*.json
+
+*-firebase-adminsdk*.json
+firebase-admin-key.json

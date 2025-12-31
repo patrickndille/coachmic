@@ -23,12 +23,20 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Configure environment for Vertex AI
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
-if settings.gcp_project_id:
-    os.environ["GOOGLE_CLOUD_PROJECT"] = settings.gcp_project_id
-if settings.gcp_location:
-    os.environ["GOOGLE_CLOUD_LOCATION"] = settings.gcp_location
+# Configure environment based on available credentials
+# Use API key (Google AI Studio) if available, otherwise fall back to Vertex AI
+if settings.gcp_api_key:
+    # Use Google AI Studio with API key (free tier available)
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
+    print("[Gemini] Using Google AI Studio with API key")
+else:
+    # Use Vertex AI (requires billing)
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+    if settings.gcp_project_id:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = settings.gcp_project_id
+    if settings.gcp_location:
+        os.environ["GOOGLE_CLOUD_LOCATION"] = settings.gcp_location
+    print("[Gemini] Using Vertex AI")
 
 # Global client instance
 _client: genai.Client | None = None
@@ -38,8 +46,17 @@ def get_client() -> genai.Client:
     """Get or create the genai client."""
     global _client
     if _client is None:
-        _client = genai.Client(http_options=HttpOptions(api_version="v1"))
-        print("[Gemini] Initialized google.genai client")
+        if settings.gcp_api_key:
+            # Initialize with API key for Google AI Studio
+            _client = genai.Client(
+                api_key=settings.gcp_api_key,
+                http_options=HttpOptions(api_version="v1")
+            )
+            print("[Gemini] Initialized google.genai client with API key")
+        else:
+            # Initialize for Vertex AI (uses ADC)
+            _client = genai.Client(http_options=HttpOptions(api_version="v1"))
+            print("[Gemini] Initialized google.genai client for Vertex AI")
     return _client
 
 
@@ -199,12 +216,20 @@ async def generate_with_gemini(
     if system_instruction:
         full_prompt = f"{system_instruction}\n\n{prompt}"
 
-    # Build config
-    config = GenerateContentConfig(
-        temperature=temperature,
-        max_output_tokens=max_tokens,
-        response_mime_type=response_mime_type,
-    )
+    # Build config - only include response_mime_type for Vertex AI (not supported by Google AI Studio)
+    if settings.gcp_api_key:
+        # Google AI Studio mode - don't use response_mime_type
+        config = GenerateContentConfig(
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+        )
+    else:
+        # Vertex AI mode - can use response_mime_type
+        config = GenerateContentConfig(
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            response_mime_type=response_mime_type,
+        )
 
     if stream:
         return _stream_generate(client, model_name, full_prompt, config)
@@ -679,7 +704,7 @@ Return ONLY valid JSON, no markdown code blocks."""
             prompt=prompt,
             system_instruction=system_instruction,
             temperature=0.25,
-            max_tokens=8096,
+            max_tokens=16384,  # Increased for complex career analysis
             response_mime_type="application/json",
             task="resume_parse_career",
             log_context="career analysis",
@@ -1243,6 +1268,9 @@ async def generate_speech_with_gemini(
     Uses the gemini-2.5-flash-preview-tts model to convert text to natural-sounding speech.
     The output is PCM audio converted to WAV format for browser compatibility.
 
+    NOTE: This feature requires Vertex AI (billing enabled). It does not work with
+    the Google AI Studio API key.
+
     Args:
         text: The text to convert to speech (max ~5000 characters recommended)
         voice_name: One of the 30 prebuilt Gemini voices (default: Kore)
@@ -1252,9 +1280,18 @@ async def generate_speech_with_gemini(
         WAV audio data as bytes
 
     Raises:
+        ValueError: If using API key mode (TTS not supported)
         Exception: If TTS generation fails
     """
     from google.genai import types
+
+    # Check if using API key mode - TTS not supported
+    if settings.gcp_api_key:
+        raise ValueError(
+            "Gemini TTS (Reader Mode) requires Vertex AI with billing enabled. "
+            "It is not available with the Google AI Studio API key. "
+            "Please disable Reader Mode or enable billing on your GCP project."
+        )
 
     client = get_client()
 

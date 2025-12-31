@@ -65,11 +65,24 @@ async def start_text_interview_endpoint(
             print(f"[TextInterview] No existing interview to clear or error: {e}")
 
     try:
+        # Validate required session fields
+        target_role = session.get("target_role")
+        interview_type = session.get("interview_type")
+        
+        if not target_role:
+            raise HTTPException(
+                status_code=400,
+                detail="Session is missing target role. Please start a new session and complete setup.",
+            )
+        
+        if not interview_type:
+            interview_type = "behavioral"  # Default fallback
+        
         # Build session context (same as voice interview)
         session_context = {
-            "target_role": session["target_role"],
+            "target_role": target_role,
             "target_company": session.get("target_company"),
-            "interview_type": session["interview_type"],
+            "interview_type": interview_type,
             "interview_length": session.get("interview_length", "short"),
             "difficulty_level": session.get("difficulty_level", "easy"),
             "resume_data": session.get("resume_data"),
